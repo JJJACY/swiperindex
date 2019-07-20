@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>jqhtml</title>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="./js/jquery-3.4.1.min.js"></script>
+  <style type="text/css">
+    *{
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .all-container{
+      position: relative;
+      /*width: 500px;*/
+      height: 360px;
+      overflow: hidden;
+      /*margin: 0 auto;*/
+    }
+    .all-list{
+      position: absolute;
+      display: flex;
+      height: 100%;
+      width:  100%;
+    }
+    .all-item{
+      width: 100%;
+      height: 360px;
+      flex: none;
+    }
+    /*.all-list{
+      transform: translateX(-1920px);
+    }*/
+    .all-switch{
+       position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .all-switch-item{
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: #F2EFE6;
+      cursor: pointer;
+    }
+    .all-switch-item.active{
+      background-color: #8B2323;
+    }
+    .all-flip{
+      position: absolute;
+      width: 50px;
+      height: 80px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #EDD0BE;
+      line-height: 80px;
+      text-align: center;
+      color: #666;
+      cursor: pointer;
+      opacity: 0;
+      transition: all .2s ease;
+    }
+    .all-flip-left{
+      left: 100px;
+    }
+    .all-flip-right{
+      right: 100px;
+    }
+    .all-container:hover .all-flip{
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="all-container" id="all-container">
+    <div class="all-list" id="all-lists">
+      <div class="all-item" style="background-color: #FFE4B5">1</div>
+      <div class="all-item" style="background-color: #696969">2</div>
+      <div class="all-item" style="background-color: #00BFFF">3</div>
+      <div class="all-item" style="background-color: #00FF00">4</div>
+      <div class="all-item" style="background-color: #CDAD00">5</div>
+    </div>
+    <div class="all-switch">
+      <div class="all-switch-item active"></div>
+      <div class="all-switch-item"></div>
+      <div class="all-switch-item"></div>
+      <div class="all-switch-item"></div>
+      <div class="all-switch-item"></div>
+    </div>
+    <a class="all-flip all-flip-left" id="all-prev"><</a>
+    <a class="all-flip all-flip-right" id="all-next">></a>
+  </div>
+</body>
+<script type="text/javascript">
+  const PAGE = {
+    data: {
+      index: 0,
+      duration: 1000,
+      isLock: false,
+      translateX: 0,
+      defaultLenght: null,
+      itemWidth: null
+    },
+    init:function(){
+      this.clone();
+      this.bind();
+      this.Tobtn();
+    },
+    clone:function(){ 
+     PAGE.data.defaultLenght = $('.all-item').length;
+     let num = PAGE.data.defaultLenght;
+     let firstItem = $($('.all-item')[0]).clone();
+     let lastItem = $($('.all-item')[num -1]).clone(); 
+     $('#all-lists').prepend(lastItem);
+     $('#all-lists').append(firstItem);
+     $('#all-lists').css('transform','translateX(-1920px)');
+    },
+    bind:function(){
+      $('.all-flip-left').on('click',this.lmoveitem);
+      $('.all-flip-right').on('click',this.rmoveitem);
+      $('.all-switch-item').on('click',this.Tobtn);
+      
+    }, 
+    lmoveitem: function(){
+      let isLock = PAGE.data.isLock;
+      if(isLock){
+        return
+      }
+      PAGE.data.index-=1;
+      let index = PAGE.data.index;
+      PAGE.cilckitem(index);
+    },
+    rmoveitem: function(){
+      let isLock = PAGE.data.isLock;
+      if(isLock){
+        return
+      }
+      PAGE.data.index+=1;
+      let index = PAGE.data.index;
+      PAGE.cilckitem(index);
+    },
+    cilckitem: function(index){
+      PAGE.data.isLock= true;
+      let itemWidth = $('.all-list').width();
+      let translateX = - (index * itemWidth);
+      let duration = PAGE.data.duration;
+      let isLock = PAGE.data.isLock;
+      $('.all-switch-item').first().addClass('active').siblings().removeClass('active');
+      $('.all-list').animate({'left':`${translateX}px`},duration,function(){
+        if (index===PAGE.data.defaultLenght){
+          $('.all-list').css('left','0px');
+          PAGE.data.index = 0;
+          translateX = - ( index * itemWidth); 
+        }
+        if(index ===-1){
+          $('.all-list').css('left',`${-(PAGE.data.defaultLenght-1)*itemWidth}px`);
+          PAGE.data.index =PAGE.data.defaultLenght-1;
+          translateX = - ( index * itemWidth);
+        }
+        PAGE.data.isLock= false;  
+      }); 
+      $('.all-switch-item').eq(index).addClass('active').siblings().removeClass('active');
+    },
+    Tobtn: function(){
+      $('.all-switch-item').each(function(index){
+        $(this).data('count',index);
+      });
+      let index =$(this).data('count');
+      PAGE.cilckitem(index);    
+    }
+  }
+  PAGE.init();
+</script>
+</html>

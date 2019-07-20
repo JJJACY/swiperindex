@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>轮播</title>
+  <meta charset="utf-8">
+  <style type="text/css">
+    *{
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .all-container{
+      position: relative;
+      height: 360px;
+      overflow: hidden;
+    }
+    .all-list{
+      position: relative;
+      display: flex;
+      height: 100%;
+    }
+    .all-item{
+      width: 100%;
+      flex: none;
+    }
+    .all-switch{
+       position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .all-switch-item{
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background-color: #F2EFE6;
+    }
+    .all-switch-item.active{
+      background-color: #8B2323;
+    }
+    .all-flip{
+      position: absolute;
+      width: 50px;
+      height: 80px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #EDD0BE;
+      line-height: 80px;
+      text-align: center;
+      color: #666;
+      cursor: pointer;
+      opacity: 0;
+      transition: all .2s ease;
+    }
+    .all-flip-left{
+      left: 100px;
+    }
+    .all-flip-right{
+      right: 100px;
+    }
+    .all-container:hover .all-flip{
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="all-container" id="all-container">
+    <div class="all-list" id="all-lists">
+      <div class="all-item" style="background-color: #FFE4B5">1</div>
+      <div class="all-item" style="background-color: #696969">2</div>
+      <div class="all-item" style="background-color: #00BFFF">3</div>
+      <div class="all-item" style="background-color: #00FF00">4</div>
+      <div class="all-item" style="background-color: #CDAD00">5</div>
+    </div>
+    <div class="all-switch">
+      <div class="all-switch-item active"></div>
+      <div class="all-switch-item"></div>
+      <div class="all-switch-item"></div>
+      <div class="all-switch-item"></div>
+      <div class="all-switch-item"></div>
+    </div>
+    <a class="all-flip all-flip-left" id="all-prev"><</a>
+    <a class="all-flip all-flip-right" id="all-next">></a>
+  </div>
+</body>
+<script type="text/javascript">
+  const PAGE ={
+    data: {
+      index: 0,
+      duration: 1000,
+      isLock:false,
+      translateX: 0,
+      defaultLenght: null,
+      itemWidth: null
+    },
+    init: function(){
+      this.bind();
+      this.clone();
+    },
+    bind: function(){
+      let allprev = document.getElementById('all-prev');
+      allprev.addEventListener('click',this.allPrev);
+      let allnext = document.getElementById('all-next');
+      allnext.addEventListener('click',this.allNext);
+      let allSwitch = document.getElementsByClassName('all-switch-item');
+      for (let i=0;i<allSwitch.length;i++){
+        allSwitch[i].setAttribute('data-index',i);
+        allSwitch           [i].addEventListener('click',this.allSwitch);
+      }
+    },
+    animateTo: function(begin,end,duration,changeCallback,finishCallback){
+      let startTime = Date.now();
+      requestAnimationFrame(function update(){
+        let dataNow = Date.now();
+        let time = dataNow - startTime;
+        let value = PAGE.linear(time,begin,end,duration);
+        typeof  changeCallback === 'function'  && changeCallback(value)
+        if(startTime + duration > dataNow){
+          requestAnimationFrame(update)
+        }else{
+          typeof finishCallback === 'function' && finishCallback(end)
+        }
+      })
+    },
+    clone: function(){
+      let allItem = document.getElementsByClassName('all-item');
+      let firstItem = allItem[0].cloneNode();
+      let lastItem = allItem[allItem.length-1].cloneNode();
+
+      let allList = document.getElementById('all-lists');
+      let index = PAGE.data.index;
+      let allItemWidth = allList.offsetWidth;
+      PAGE.data.defaultLenght = allItem.length;
+      PAGE.data.itemWidth = allItemWidth;    
+      PAGE.data.translateX = -(allItemWidth + allItemWidth * index);
+
+      allList.appendChild(firstItem);
+      allList.prepend(lastItem);
+      PAGE.goIndex(index);
+    },
+    goIndex: function(index){
+      let allDuration = PAGE.data.duration;
+      let allItemWidth = PAGE.data.itemWidth;
+      let beginTranslateX = PAGE.data.translateX;
+      let endTranslateX = -(allItemWidth + allItemWidth * index);
+      let allList = document.getElementById('all-lists');
+      let isLock = PAGE.data.isLock;
+      if (isLock){
+        return
+      }
+      PAGE.data.isLock = true;
+      PAGE.animateTo(beginTranslateX,endTranslateX,allDuration,function(value){
+        allList.style.transform = `translateX(${value}px)`;
+
+      },function(value){
+        let allLength = PAGE.data.defaultLenght;
+        if(index === -1){
+          index = allLength -1;
+          value = -(allItemWidth + allItemWidth*index);
+        }
+        if( index === allLength){
+          index = 0;
+          value = -(allItemWidth + allItemWidth*index);
+        }
+        allList.style.transform = `translateX(${value}px)`;
+        PAGE.data.index = index;
+        PAGE.data.translateX = value;
+        PAGE.data.isLock=false;
+        PAGE.heightlight(index);
+      })
+    },
+    allPrev: function(){
+      let index = PAGE.data.index ;
+      PAGE.goIndex(index -1);
+    },
+    allNext: function(){
+      let index = PAGE.data.index ;
+      PAGE.goIndex(index + 1);
+    },
+    heightlight: function(index) {
+        let allItem = document.getElementsByClassName('all-switch-item');
+        for (let i = 0; i < allItem.length; i++) {
+          allItem[i].className = 'all-switch-item';
+        }
+        allItem[index].className = 'all-switch-item active';
+      },
+    allSwitch: function(e){
+      let index = e.target.dataset.index;
+      index = Number(index);
+      PAGE.goIndex(index); 
+    },
+    linear: function(time,begin,end,duration){
+      return ( end - begin) * time / duration + begin;
+    }
+
+  }
+  PAGE.init();
+</script>
+</html>
